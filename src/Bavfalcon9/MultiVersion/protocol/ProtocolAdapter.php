@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Bavfalcon9\MultiVersion\protocol;
 
+use Bavfalcon9\MultiVersion\Loader;
+use Bavfalcon9\MultiVersion\player\VersionedPlayer;
+use Bavfalcon9\MultiVersion\utils\Messages;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerCreationEvent;
 use pocketmine\event\server\DataPacketReceiveEvent;
@@ -14,13 +17,10 @@ use pocketmine\network\mcpe\protocol\LoginPacket;
 use pocketmine\network\mcpe\protocol\PacketPool;
 use pocketmine\network\mcpe\protocol\ProtocolInfo;
 use pocketmine\Player;
-use Bavfalcon9\MultiVersion\utils\Messages;
-use Bavfalcon9\MultiVersion\player\VersionedPlayer;
-use Bavfalcon9\MultiVersion\Loader;
 
 abstract class ProtocolAdapter implements Listener {
     private int $id;
-    private bool $enabled;
+    //private bool $enabled;
 
     /** @var VersionedPlayer[] */
     private array $players;
@@ -57,20 +57,19 @@ abstract class ProtocolAdapter implements Listener {
      * Hacks login and handles batches.
      * @param DataPacketReceiveEvent $ev
      */
-    public function handleIncoming(DataPacketReceiveEvent $ev): void {
+    public function handleIncoming(DataPacketReceiveEvent $ev): void
+    {
         $packet = $ev->getPacket();
         $player = $this->getPlayer($ev->getPlayer()->getName());
 
         if (!$player === null) {
             return;
         }
-        if ($packet instanceof LoginPacket) {
-            if ($this->id === $packet->protocol) {
-                $packet->protocol = ProtocolInfo::CURRENT_PROTOCOL;
-                $this->onConnecting($ev->getPlayer(), $packet);
-                $this->addPlayer($ev->getPlayer(), $this->getProtocolId());
-                return;
-            }
+        if (($packet instanceof LoginPacket) and $this->id === $packet->protocol) {
+            $packet->protocol = ProtocolInfo::CURRENT_PROTOCOL;
+            $this->onConnecting($ev->getPlayer(), $packet);
+            $this->addPlayer($ev->getPlayer(), $this->getProtocolId());
+            return;
         }
 
         if ($packet instanceof BatchPacket) {
