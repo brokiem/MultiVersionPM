@@ -22,7 +22,7 @@ class Loader extends PluginBase
         // hehe
         $this->getLogger()->notice("╔════════════════════════════╗");
         $this->getLogger()->notice(" ");
-        $this->getLogger()->notice("   MultiVersion Enabled!");
+        $this->getLogger()->notice("    MultiVersion Enabled!");
         $this->getLogger()->notice("   ");
         $this->getLogger()->notice("╚════════════════════════════╝");
     }
@@ -31,7 +31,7 @@ class Loader extends PluginBase
         // hehe
         $this->getLogger()->notice("╔═════════════════════════════╗");
         $this->getLogger()->notice(" ");
-        $this->getLogger()->notice("   MultiVersion Disabled!");
+        $this->getLogger()->notice("    MultiVersion Disabled!");
         $this->getLogger()->notice("   ");
         $this->getLogger()->notice("╚═════════════════════════════╝");
     }
