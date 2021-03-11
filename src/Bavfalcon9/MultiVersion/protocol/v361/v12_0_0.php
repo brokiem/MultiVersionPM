@@ -16,7 +16,7 @@ class v12_0_0 extends ProtocolAdapter {
     }
 
     public function onIncoming(VersionedPlayer $player, DataPacket &$packet): void {
-        if (!$this->getPlayer($ev->getPlayer()->getName())) return;
+
     }
 
     public function onOutgoing(VersionedPlayer $player, DataPacket &$packet): void {

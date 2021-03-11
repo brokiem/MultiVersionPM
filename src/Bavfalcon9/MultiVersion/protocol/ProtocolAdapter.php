@@ -6,7 +6,6 @@ namespace Bavfalcon9\MultiVersion\protocol;
 
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerCreationEvent;
-use pocketmine\event\player\PlayerPreLoginEvent;
 use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\event\server\DataPacketSendEvent;
 use pocketmine\network\mcpe\protocol\BatchPacket;
@@ -15,13 +14,11 @@ use pocketmine\network\mcpe\protocol\LoginPacket;
 use pocketmine\network\mcpe\protocol\PacketPool;
 use pocketmine\network\mcpe\protocol\ProtocolInfo;
 use pocketmine\Player;
-use pocketmine\plugin\PluginManager;
 use Bavfalcon9\MultiVersion\utils\Messages;
 use Bavfalcon9\MultiVersion\player\VersionedPlayer;
 use Bavfalcon9\MultiVersion\Loader;
 
 abstract class ProtocolAdapter implements Listener {
-    private Loader $plugin;
     private int $id;
     private bool $enabled;
 
@@ -29,11 +26,10 @@ abstract class ProtocolAdapter implements Listener {
     private array $players;
 
     public function __construct(Loader $plugin, int $pid) {
-        $this->plugin = $plugin;
         $this->id = $pid;
-        $this->enabled = false;
+        //$this->enabled = false;
         $this->players = [];
-        $this->plugin->getServer()->getPluginManager()->registerEvents($this, $plugin);
+        $plugin->getServer()->getPluginManager()->registerEvents($this, $plugin);
     }
 
     /**
@@ -65,6 +61,9 @@ abstract class ProtocolAdapter implements Listener {
         $packet = $ev->getPacket();
         $player = $this->getPlayer($ev->getPlayer()->getName());
 
+        if (!$player === null) {
+            return;
+        }
         if ($packet instanceof LoginPacket) {
             if ($this->id === $packet->protocol) {
                 $packet->protocol = ProtocolInfo::CURRENT_PROTOCOL;
@@ -83,7 +82,7 @@ abstract class ProtocolAdapter implements Listener {
                 $newPackets[] = $pk;
             }
 
-            // rebatch
+            // re batch
             $packet = new BatchPacket();
 
             foreach ($newPackets as $pk) {
@@ -132,11 +131,11 @@ abstract class ProtocolAdapter implements Listener {
      * @return VersionedPlayer|null
      */
     public function getPlayer(string $name): ?VersionedPlayer {
-        $match = array_filter($this->players, function ($versionedPlayer) use ($name): bool {
+        $match = array_filter($this->players, static function ($versionedPlayer) use ($name): bool {
             return $versionedPlayer->getPlayer()->getName() === $name;
         });
 
-        return isset($match[0]) ? $match[0] : null;
+        return $match[0] ?? null;
     }
 
     public function getPlayers(): array {
@@ -150,10 +149,11 @@ abstract class ProtocolAdapter implements Listener {
     /**
      * Add a player to the adapter.
      * @param Player $player
+     * @param int $protocolId
      * @return VersionedPlayer
      */
-    protected function addPlayer(Player $player): VersionedPlayer {
-        return $this->players[] = new VersionedPlayer($player, $this->id);
+    protected function addPlayer(Player $player, int $protocolId): VersionedPlayer {
+        return $this->players[] = new VersionedPlayer($player, $protocolId);
     }
 
     /**
@@ -166,7 +166,10 @@ abstract class ProtocolAdapter implements Listener {
             if ($versionedPlayer->getPlayer()->getName() === $name) {
                 $versionedPlayer->getPlayer()->close('', Messages::get("disconnect.reason.shutdown", $this->id));
                 unset($this->players[$i]);
+
+                return true;
             }
         }
+        return false;
     }
 }
